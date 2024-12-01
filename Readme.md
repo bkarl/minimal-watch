@@ -1,4 +1,4 @@
-# LED christmas tree
+# minimal-watch
 This repo contains hardware and software for a minimalistic smartwatch. 
 
 ## Features
