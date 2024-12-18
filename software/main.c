@@ -5,7 +5,6 @@
 
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_RTC_Init(void);
 
 int main(void)
 {
