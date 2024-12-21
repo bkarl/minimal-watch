@@ -1,4 +1,5 @@
 #include "display.h"
+#include "rtc.h"
 
 display_state_t display_state;
 
@@ -31,7 +32,12 @@ void display_init() {
 
 void display_set_time()
 {
-    
+    RTC_TimeTypeDef sTime = {0};
+    RTC_DateTypeDef sDate = {0};
+    HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+    HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+    display_state.red_vals[0] = sTime.Hours;
+    display_state.green_vals[0] = sTime.Minutes;
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {

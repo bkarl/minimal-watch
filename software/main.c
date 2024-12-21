@@ -2,6 +2,7 @@
 #include "display.h"
 #include "power_state.h"
 #include "rtc.h"
+#include "i2c_bitbanging.h"
 
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
@@ -9,19 +10,13 @@ static void MX_GPIO_Init(void);
 int main(void)
 {
   HAL_Init();
-
-
   SystemClock_Config();
-
-  //__HAL_RCC_GET_FLAG(RCC_FLAG_PINRST)
-  //__HAL_PWR_GET_FLAG(PWR_FLAG_SB)
-  //GPIIO AnalogState
 
   MX_GPIO_Init();
   rtc_init();
   rtc_reset_time();
   display_init();
-
+  i2c_init();
 
   while (1)
   {
