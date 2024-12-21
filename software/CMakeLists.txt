@@ -12,6 +12,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 set(PROJECT_SOURCES
     main.c
     display.c
+    bma400.c
     power_state.c
     i2c_bitbanging.c
     rtc.c

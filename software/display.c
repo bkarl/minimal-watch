@@ -111,9 +111,6 @@ void display_init_timer()
     TIM_MasterConfigTypeDef sMasterConfig = {0};
     __HAL_RCC_TIM2_CLK_ENABLE();
 
-    /* USER CODE BEGIN TIM2_Init 1 */
-
-    /* USER CODE END TIM2_Init 1 */
     htim2.Instance = TIM2;
     htim2.Init.Prescaler = 24000;
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -129,8 +126,6 @@ void display_init_timer()
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig);
 
-
-    /* TIM2 interrupt Init */
     HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
     HAL_TIM_Base_Start_IT(&htim2);

@@ -7,6 +7,27 @@ void i2c_init() {
     i2c_init_delay_timer();
 }
 
+void i2c_read_register(uint8_t address, uint8_t reg_address, uint8_t* dout, uint8_t n_read) {
+    i2c_start_condition();
+    i2c_master_write(address | 1);
+    i2c_master_write(reg_address);
+    i2c_start_condition();
+    for (int i = 0; i < n_read; i++) {
+        uint8_t ack = i == n_read - 1 ? 0 : 1;
+        dout[i] = i2c_master_read(ack);
+    }
+    i2c_stop_condition();
+}
+
+void i2c_write_register(uint8_t address, uint8_t reg_address, uint8_t* din, uint8_t n_write) {
+    i2c_start_condition();
+    i2c_master_write(address | 1);
+    i2c_master_write(reg_address);
+    for (int i = 0; i < n_write; i++) {
+        i2c_master_write(din[i]);
+    }
+    i2c_stop_condition();
+}
 /**
 * @brief I2C master write 8-bit data bit-bang
 * @param unsigned char b - data to transmit
@@ -19,10 +40,10 @@ uint8_t i2c_master_write (unsigned char b)
     do
     {
         (b & msk) ? i2c_set_sda() : i2c_clear_sda();
+        i2c_half_bit_delay();
         i2c_set_scl();
         i2c_half_bit_delay();
         i2c_clear_scl();
-        i2c_half_bit_delay();
     }
     while ((msk>>=1) != 0);
     i2c_set_sda();/* ACK slot checking */

@@ -3,6 +3,7 @@
 #include "power_state.h"
 #include "rtc.h"
 #include "i2c_bitbanging.h"
+#include "bma400.h"
 
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
@@ -17,6 +18,7 @@ int main(void)
   rtc_reset_time();
   display_init();
   i2c_init();
+  bma400_get_chip_id();
 
   while (1)
   {
