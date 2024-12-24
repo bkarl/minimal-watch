@@ -33,7 +33,7 @@ fn main() -> io::Result<()> {
     }
   }
 
-  stdout.queue(cursor::MoveTo(0, N_ROWS as u16))?;
+  stdout.queue(cursor::MoveTo(0, (N_ROWS + 1) as u16))?;
   stdout.flush()?;
   Ok(())
 }
