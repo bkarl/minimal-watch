@@ -23,7 +23,8 @@ fn main() -> io::Result<()> {
 
   stdout.execute(terminal::Clear(terminal::ClearType::All))?;
   let mut display = Display::new();
-  set_time_bin(&mut display);
+  //set_time_bin(&mut display);
+  set_time_hex(&mut display);
   for y in 0..N_ROWS {
     for x in 0..N_COLUMNS {
         stdout
@@ -35,7 +36,34 @@ fn main() -> io::Result<()> {
   stdout.queue(cursor::MoveTo(0, N_ROWS as u16))?;
   stdout.flush()?;
   Ok(())
-} 
+}
+
+fn set_time_hex(display: &mut Display) {
+  let local: DateTime<Local> = Local::now(); 
+  set_quartet(display, local.hour(), 0);
+  set_quartet(display, local.minute(), 1);
+  set_quartet(display, local.second(), 2);
+}
+
+fn set_quartet(display: &mut Display, value: u32, idx: usize) {
+  
+  for y in (0..2).rev() {
+    for x in (0..2).rev() {
+      let bit_idx_red = x^1 + (y^1) * N_ROWS;
+      let bit_idx_green = bit_idx_red + 4;
+      //println!("bit_idx_red {}", bit_idx_red);
+      //println!("bit_idx_green {}", x);
+      let mut color = (127u8, 127u8, 127u8);
+      if value & (1 << bit_idx_red) != 0 {
+        color.0 += 127;
+      }
+      if value & (1 << bit_idx_green) != 0 {
+        color.1 += 127;
+      }
+      display.contents[y][x + idx * 2] = Color::Rgb { r: color.0, g: color.1, b: color.2 };
+    }
+  }
+}
 
 fn set_time_bin(display: &mut Display) {
   let local: DateTime<Local> = Local::now(); 
@@ -44,7 +72,6 @@ fn set_time_bin(display: &mut Display) {
 }
 
 fn set_int_in_row(display: &mut Display, value: u32, color: Color, row: usize) {
-  
   for bit in 0..N_COLUMNS {
     if value & (1 << bit) != 0 {
       display.contents[row][N_COLUMNS - 1 - bit] = color;  
