@@ -13,7 +13,9 @@ set(PROJECT_SOURCES
     main.c
     display.c
     interrupt.c
+    bma400.c
     power_state.c
+    i2c_bitbanging.c
     rtc.c
     stm32l0xx_hal_msp.c
     stm32l0xx_it.c

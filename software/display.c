@@ -1,4 +1,5 @@
 #include "display.h"
+#include "rtc.h"
 
 display_state_t display_state;
 
@@ -31,7 +32,12 @@ void display_init() {
 
 void display_set_time()
 {
-    
+    RTC_TimeTypeDef sTime = {0};
+    RTC_DateTypeDef sDate = {0};
+    HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+    HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+    display_state.red_vals[0] = sTime.Hours;
+    display_state.green_vals[0] = sTime.Minutes;
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
@@ -105,9 +111,6 @@ void display_init_timer()
     TIM_MasterConfigTypeDef sMasterConfig = {0};
     __HAL_RCC_TIM2_CLK_ENABLE();
 
-    /* USER CODE BEGIN TIM2_Init 1 */
-
-    /* USER CODE END TIM2_Init 1 */
     htim2.Instance = TIM2;
     htim2.Init.Prescaler = 24000;
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -123,8 +126,6 @@ void display_init_timer()
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig);
 
-
-    /* TIM2 interrupt Init */
     HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
     HAL_TIM_Base_Start_IT(&htim2);

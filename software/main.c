@@ -3,6 +3,8 @@
 #include "power_state.h"
 #include "rtc.h"
 #include "interrupt.h"
+#include "i2c_bitbanging.h"
+#include "bma400.h"
 
 void SystemClock_Config(void);
 
@@ -12,13 +14,12 @@ int main(void)
 
   SystemClock_Config();
 
-  //__HAL_RCC_GET_FLAG(RCC_FLAG_PINRST)
-  //__HAL_PWR_GET_FLAG(PWR_FLAG_SB)
-  //GPIIO AnalogState
-
+  MX_GPIO_Init();
   rtc_init();
   rtc_reset_time();
   display_init();
+  i2c_init();
+  bma400_get_chip_id();
 
   while (1)
   {
