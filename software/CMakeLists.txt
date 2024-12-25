@@ -12,6 +12,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 set(PROJECT_SOURCES
     main.c
     display.c
+    interrupt.c
     power_state.c
     rtc.c
     stm32l0xx_hal_msp.c
