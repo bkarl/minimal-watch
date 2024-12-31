@@ -50,3 +50,4 @@ void display_switch_all_off();
 void display_iterate_column();
 void switch_row_color_if_enabled(pin_mapping_t *row_pin_mapping, uint8_t row_val, unsigned row_idx);
 void display_init_timer();
+void display_set_time();

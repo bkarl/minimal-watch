@@ -22,8 +22,10 @@ set(PROJECT_SOURCES
 )
 
 add_executable(minimal-watch ${PROJECT_SOURCES})
-link_directories(lib)
-
+target_link_options(minimal-watch
+  PUBLIC
+    LINKER:-Map=foo.map
+)
 target_compile_options(minimal-watch PRIVATE -Wall -Wextra -Wpedantic)
 
 target_link_libraries(minimal-watch

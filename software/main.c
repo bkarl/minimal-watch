@@ -11,20 +11,20 @@ void SystemClock_Config(void);
 int main(void)
 {
   HAL_Init();
-
   SystemClock_Config();
+  __enable_irq();
 
-  MX_GPIO_Init();
   rtc_init();
   rtc_reset_time();
+  display_set_time();
   display_init();
-  i2c_init();
-  bma400_get_chip_id();
+  //i2c_init();
+  //bma400_get_chip_id();
 
   while (1)
   {
-    interrupts_init();
-    power_enter_stop_mode();
+    //interrupts_init();
+    //power_enter_stop_mode();
   }
 }
 

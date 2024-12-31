@@ -19,7 +19,7 @@ pin_mapping_t row_pin_mapping_red[] = {
 
 pin_mapping_t row_pin_mapping_green[] = {
     {GPIO_PIN_6, GPIOA},
-    {GPIO_PIN_3, GPIOB}
+    {GPIO_PIN_3, GPIOA}
 };
 
 TIM_HandleTypeDef htim2;
@@ -37,7 +37,7 @@ void display_set_time()
     HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
     HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
     display_state.red_vals[0] = sTime.Hours;
-    display_state.green_vals[0] = sTime.Minutes;
+    display_state.green_vals[1] = sTime.Minutes;
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
@@ -112,11 +112,11 @@ void display_init_timer()
     __HAL_RCC_TIM2_CLK_ENABLE();
 
     htim2.Instance = TIM2;
-    htim2.Init.Prescaler = 24000;
+    htim2.Init.Prescaler = 2400;
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
     htim2.Init.Period = 10;
     htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+    htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     HAL_TIM_Base_Init(&htim2);
 
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
