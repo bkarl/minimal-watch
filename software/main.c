@@ -16,10 +16,11 @@ int main(void)
 
   rtc_init();
   rtc_reset_time();
-  display_set_time();
-  display_init();
-  //i2c_init();
-  //bma400_get_chip_id();
+  //display_set_time();
+  //display_init();
+  i2c_init();
+  bma400_get_chip_id();
+  bma400_init();
 
   while (1)
   {

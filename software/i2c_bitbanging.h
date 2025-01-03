@@ -2,8 +2,8 @@
 
 #include "stm32l0xx_hal_conf.h"
 
-#define I2C_SDA_PIN GPIO_PIN_10
-#define I2C_SCL_PIN GPIO_PIN_4
+#define I2C_SDA_PIN GPIO_PIN_4
+#define I2C_SCL_PIN GPIO_PIN_10
 #define I2C_DIN_PORT GPIOA->IDR
 #define I2C_DO_PORT GPIOA
 

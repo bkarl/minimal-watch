@@ -9,9 +9,12 @@ void i2c_init() {
 
 void i2c_read_register(uint8_t address, uint8_t reg_address, uint8_t* dout, uint8_t n_read) {
     i2c_start_condition();
-    i2c_master_write(address | 1);
+    i2c_master_write(address);
     i2c_master_write(reg_address);
+    i2c_set_scl();
+    i2c_set_sda();
     i2c_start_condition();
+    i2c_master_write(address | 1);
     for (int i = 0; i < n_read; i++) {
         uint8_t ack = i == n_read - 1 ? 0 : 1;
         dout[i] = i2c_master_read(ack);
@@ -21,7 +24,7 @@ void i2c_read_register(uint8_t address, uint8_t reg_address, uint8_t* dout, uint
 
 void i2c_write_register(uint8_t address, uint8_t reg_address, uint8_t* din, uint8_t n_write) {
     i2c_start_condition();
-    i2c_master_write(address | 1);
+    i2c_master_write(address);
     i2c_master_write(reg_address);
     for (int i = 0; i < n_write; i++) {
         i2c_master_write(din[i]);
@@ -46,10 +49,11 @@ uint8_t i2c_master_write (unsigned char b)
         i2c_clear_scl();
     }
     while ((msk>>=1) != 0);
+    i2c_half_bit_delay();
     i2c_set_sda();/* ACK slot checking */
     i2c_set_scl();
-    i2c_half_bit_delay();
     ack = i2c_get_sda();
+    i2c_half_bit_delay();
     i2c_clear_scl();
     return (ack);
 }
@@ -115,18 +119,21 @@ void i2c_stop_condition(void)
 
 void i2c_init_gpio() {
     __HAL_RCC_GPIOA_CLK_ENABLE();
+    i2c_set_scl();
+    i2c_set_sda();
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pin = I2C_SDA_PIN | I2C_SCL_PIN;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
 void i2c_init_delay_timer() {
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
     TIM_MasterConfigTypeDef sMasterConfig = {0};
-    __HAL_RCC_TIM2_CLK_ENABLE();
+    __HAL_RCC_TIM21_CLK_ENABLE();
 
     /* USER CODE BEGIN TIM2_Init 1 */
 
@@ -134,9 +141,9 @@ void i2c_init_delay_timer() {
     htim21.Instance = TIM21;
     htim21.Init.Prescaler = 24; //1 MHz clock rate
     htim21.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim21.Init.Period = 1;
+    htim21.Init.Period = 10;
     htim21.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim21.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+    htim21.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     HAL_TIM_Base_Init(&htim21);
 
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
@@ -151,7 +158,7 @@ void i2c_init_delay_timer() {
 
 void i2c_half_bit_delay() {
     __HAL_TIM_SET_COUNTER(&htim21,0);  
-	while (__HAL_TIM_GET_COUNTER(&htim21) < 1);
+	while (__HAL_TIM_GET_COUNTER(&htim21) < 5);
 }
 
 void i2c_set_sda() { HAL_GPIO_WritePin(I2C_DO_PORT, I2C_SDA_PIN, GPIO_PIN_SET); }
