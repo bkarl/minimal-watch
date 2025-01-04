@@ -21,10 +21,10 @@ int main(void)
   i2c_init();
   bma400_get_chip_id();
   bma400_init();
+  interrupts_init();
 
   while (1)
   {
-    //interrupts_init();
     //power_enter_stop_mode();
   }
 }
