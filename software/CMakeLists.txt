@@ -40,5 +40,9 @@ target_link_libraries(minimal-watch
     HAL::STM32::L0::RTC
     HAL::STM32::L0::TIM
     HAL::STM32::L0::TIMEx
+    HAL::STM32::L0::LPTIM
     CMSIS::STM32::L011G4
     )
+
+  add_custom_command (TARGET minimal-watch POST_BUILD COMMAND arm-none-eabi-nm -S --size-sort -s minimal-watch.elf)
+  add_custom_command (TARGET minimal-watch POST_BUILD COMMAND arm-none-eabi-size -t minimal-watch.elf)

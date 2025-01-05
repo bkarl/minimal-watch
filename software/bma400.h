@@ -25,8 +25,8 @@
 #define BMA400_INT_CONFIG1_DATA         0x08 //d_tap_int_en, non latching mode
 #define BMA400_INT_MAP1_DATA            0x00
 #define BMA400_INT_MAP2_DATA            0x00
-#define BMA400_INT_MAP12_DATA           0x04 //tap sensing interrupt is mapped to INT1
-#define BMA400_INT12_IO_CTRL_DATA       0x02 //interrupt pin INT1 high-active, pp
+#define BMA400_INT_MAP12_DATA           0x40 //tap sensing interrupt is mapped to INT2
+#define BMA400_INT12_IO_CTRL_DATA       0x20 //interrupt pin INT2 high-active, pp
 
 uint8_t bma400_get_chip_id();
 void bma400_init();

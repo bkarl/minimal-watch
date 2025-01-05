@@ -8,12 +8,16 @@ uint8_t bma400_get_chip_id() {
 }
 
 void bma400_init() {
-    uint8_t acc0_cfg_in[] = {BMA400_ACC_CONFIG0_DATA, BMA400_ACC_CONFIG1_DATA, BMA400_ACC_CONFIG2_DATA};
+    uint8_t acc0_cfg_in[] = {BMA400_ACC_CONFIG0_DATA, BMA400_ACC_CONFIG1_DATA, BMA400_ACC_CONFIG2_ADDRESS, BMA400_ACC_CONFIG2_DATA};
     i2c_write_register(BMA400_ADDRESS, BMA400_ACC_CONFIG0_ADDRESS, acc0_cfg_in, 1);
     HAL_Delay(2);
-    i2c_write_register(BMA400_ADDRESS, BMA400_ACC_CONFIG1_ADDRESS, &acc0_cfg_in[1], 2);
-    uint8_t int_cfg_in[] = {BMA400_INT_CONFIG0_DATA, BMA400_INT_CONFIG1_DATA, BMA400_INT_MAP1_DATA,
-                            BMA400_INT_MAP2_DATA, BMA400_INT_MAP12_DATA, BMA400_INT12_IO_CTRL_DATA};
+    i2c_write_register(BMA400_ADDRESS, BMA400_ACC_CONFIG1_ADDRESS, &acc0_cfg_in[1], 3);
+    uint8_t int_cfg_in[] = {BMA400_INT_CONFIG0_DATA, 
+                            BMA400_INT_CONFIG1_ADDRESS, BMA400_INT_CONFIG1_DATA, 
+                            BMA400_INT1_MAP_ADDRESS, BMA400_INT_MAP1_DATA,
+                            BMA400_INT2_MAP_ADDRESS, BMA400_INT_MAP2_DATA, 
+                            BMA400_INT12_MAP_ADDRESS, BMA400_INT_MAP12_DATA, 
+                            BMA400_INT12_IO_CTRL_ADDRESS, BMA400_INT12_IO_CTRL_DATA};
     i2c_write_register(BMA400_ADDRESS, BMA400_INT_CONFIG0_ADDRESS, int_cfg_in, sizeof(int_cfg_in));
 }
 
