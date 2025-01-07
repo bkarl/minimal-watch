@@ -77,7 +77,7 @@ unsigned char i2c_master_read (unsigned char ack)
         i2c_half_bit_delay();
     }
     while ((msk>>=1) != 0);
-    if(ack != 0)
+    if(ack)
     {
         i2c_clear_sda();/* ACK slot control */
     }
@@ -85,6 +85,7 @@ unsigned char i2c_master_read (unsigned char ack)
     i2c_half_bit_delay();
     i2c_clear_scl();
     i2c_half_bit_delay();
+    i2c_set_sda();
     return (b);
 }
 

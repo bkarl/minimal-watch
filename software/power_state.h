@@ -7,6 +7,7 @@ void power_enter_stop_mode();
 void power_deinit_gpios();
 void power_init_timeout_counter();
 void power_reset_timeout_counter();
+void power_leave_stop_mode();
 
 extern LPTIM_HandleTypeDef hlptim1;
-extern bool enter_sleep_mode;
+extern volatile bool enter_sleep_mode;

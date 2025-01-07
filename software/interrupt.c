@@ -37,6 +37,7 @@ void interrupts_init_gpio() {
   }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    power_reset_timeout_counter();
     switch (GPIO_Pin) {
         case BUTTON_0_PIN: 
             break;

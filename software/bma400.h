@@ -30,3 +30,4 @@
 
 uint8_t bma400_get_chip_id();
 void bma400_init();
+void bma400_clear_interrupt_status();

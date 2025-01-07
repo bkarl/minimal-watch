@@ -1,11 +1,11 @@
 #include "power_state.h"
 
 LPTIM_HandleTypeDef hlptim1;
-bool enter_sleep_mode = false;
+volatile bool enter_sleep_mode = false;
 
 void power_enter_stop_mode()
 {
-    power_deinit_gpios();
+    //power_deinit_gpios();
 
     /*
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -19,6 +19,12 @@ void power_enter_stop_mode()
     __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
     HAL_SuspendTick();
     HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
+}
+
+void power_leave_stop_mode()
+{
+  HAL_ResumeTick();
+  enter_sleep_mode = false;
 }
 
 void power_deinit_gpios() {
@@ -50,9 +56,14 @@ void power_init_timeout_counter() {
   hlptim1.Init.UpdateMode = LPTIM_UPDATE_IMMEDIATE;
   hlptim1.Init.CounterSource = LPTIM_COUNTERSOURCE_INTERNAL;
   HAL_LPTIM_Init(&hlptim1);
-  HAL_LPTIM_PWM_Start_IT(&hlptim1, (32768/128) * 3 + 1, (32768/128) * 3);
+  HAL_LPTIM_PWM_Start_IT(&hlptim1, (32768 / 128) * 3 + 1, (32768 / 128) * 3);
   HAL_NVIC_SetPriority(LPTIM1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
+}
+
+void power_stop_timeout_counter() {
+  HAL_LPTIM_PWM_Stop_IT(&hlptim1);
+  __HAL_RCC_LPTIM1_CLK_DISABLE();
 }
 
 void power_reset_timeout_counter() {
@@ -62,5 +73,6 @@ void power_reset_timeout_counter() {
 void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
 {
   UNUSED(hlptim);
+  power_stop_timeout_counter();
   enter_sleep_mode = true;
 }

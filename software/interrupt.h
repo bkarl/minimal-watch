@@ -1,6 +1,7 @@
 #pragma once
 
 #include "stm32l0xx_hal.h"
+#include "power_state.h"
 
 #define BMA_400_INT1_PIN GPIO_PIN_9
 #define BMA_400_INT2_PIN GPIO_PIN_15

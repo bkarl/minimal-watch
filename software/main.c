@@ -11,21 +11,26 @@ void SystemClock_Config(void);
 int main(void)
 {
   HAL_Init();
-  SystemClock_Config();
-  __enable_irq();
 
-  rtc_init();
-  rtc_reset_time();
-  //display_set_time();
-  //display_init();
-  i2c_init();
-  bma400_get_chip_id();
-  bma400_init();
-  interrupts_init();
+  //bma400_get_chip_id();
 
   while (1)
   {
-    //power_enter_stop_mode();
+    SystemClock_Config();
+    __enable_irq();
+
+    rtc_init();
+    rtc_reset_time();
+    i2c_init();
+    bma400_init();
+    interrupts_init();
+    power_init_timeout_counter();
+    display_set_time();
+    display_init();
+    while (enter_sleep_mode == false);
+    display_shutdown();
+    power_enter_stop_mode();
+    power_leave_stop_mode();
   }
 }
 
@@ -73,8 +78,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC | RCC_PERIPHCLK_LPTIM1;
   PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
+  PeriphClkInit.LptimClockSelection = RCC_LPTIM1CLKSOURCE_LSE;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();

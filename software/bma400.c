@@ -24,4 +24,5 @@ void bma400_init() {
 void bma400_clear_interrupt_status() {
     uint8_t int_stat[3];
     i2c_read_register(BMA400_ADDRESS, BMA400_ACC_INT_STAT0_ADDRESS, int_stat, 3);
+    return;
 }

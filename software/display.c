@@ -30,6 +30,12 @@ void display_init() {
     display_init_timer();
 }
 
+void display_shutdown() {
+    HAL_TIM_Base_Stop_IT(&htim2);
+    display_switch_all_off();
+    __HAL_RCC_TIM2_CLK_DISABLE();
+}
+
 void display_set_time()
 {
     RTC_TimeTypeDef sTime = {0};
