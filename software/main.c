@@ -5,23 +5,26 @@
 #include "interrupt.h"
 #include "i2c_bitbanging.h"
 #include "bma400.h"
+#include "nfc.h"
 
 void SystemClock_Config(void);
 
 int main(void)
 {
   HAL_Init();
+  SystemClock_Config();
+  __enable_irq();
+  power_disable_light_nfc();
 
-  //bma400_get_chip_id();
-
+  power_enable_light_nfc();
+  i2c_init();
+  init_nfc();
+  while(1);
+  /*
   while (1)
   {
-    SystemClock_Config();
-    __enable_irq();
-
     rtc_init();
     rtc_reset_time();
-    i2c_init();
     bma400_init();
     interrupts_init();
     power_init_timeout_counter();
@@ -32,6 +35,7 @@ int main(void)
     power_enter_stop_mode();
     power_leave_stop_mode();
   }
+  */
 }
 
 void SystemClock_Config(void)

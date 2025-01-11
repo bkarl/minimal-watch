@@ -21,6 +21,21 @@ void power_enter_stop_mode()
     HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI);
 }
 
+void power_enable_light_nfc() {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  GPIO_InitStruct.Pin = GPIO_PIN_NFC_LIGHTSENSOR_SUPPLY;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIO_PORT_NFC_LIGHTSENSOR_SUPPLY, &GPIO_InitStruct);
+  HAL_GPIO_WritePin(GPIO_PORT_NFC_LIGHTSENSOR_SUPPLY, GPIO_PIN_NFC_LIGHTSENSOR_SUPPLY, GPIO_PIN_SET);
+}
+
+void power_disable_light_nfc() {
+  HAL_GPIO_WritePin(GPIO_PORT_NFC_LIGHTSENSOR_SUPPLY, GPIO_PIN_NFC_LIGHTSENSOR_SUPPLY, GPIO_PIN_RESET);
+}
+
 void power_leave_stop_mode()
 {
   HAL_ResumeTick();
