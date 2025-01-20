@@ -22,6 +22,8 @@ void power_enter_stop_mode()
 }
 
 void power_enable_light_nfc() {
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   GPIO_InitStruct.Pin = GPIO_PIN_NFC_LIGHTSENSOR_SUPPLY;
@@ -33,6 +35,17 @@ void power_enable_light_nfc() {
 }
 
 void power_disable_light_nfc() {
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  GPIO_InitStruct.Pin = GPIO_PIN_NFC_LIGHTSENSOR_SUPPLY;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIO_PORT_NFC_LIGHTSENSOR_SUPPLY, &GPIO_InitStruct);
+  HAL_GPIO_WritePin(GPIO_PORT_NFC_LIGHTSENSOR_SUPPLY, GPIO_PIN_NFC_LIGHTSENSOR_SUPPLY, GPIO_PIN_SET);
+
   HAL_GPIO_WritePin(GPIO_PORT_NFC_LIGHTSENSOR_SUPPLY, GPIO_PIN_NFC_LIGHTSENSOR_SUPPLY, GPIO_PIN_RESET);
 }
 

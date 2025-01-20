@@ -26,8 +26,8 @@ void interrupts_init_gpio() {
     HAL_GPIO_Init(BMA_400_INT_GPIO, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = NFC_INT_PIN;
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     HAL_GPIO_Init(NFC_INT_GPIO, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = BUTTON_0_PIN | BUTTON_1_PIN | BUTTON_2_PIN;

@@ -3,6 +3,8 @@
 CRC_HandleTypeDef hcrc;
 
 void init_nfc() {
+    uint8_t rdata_out[255];
+
     nfc_init_crc_engine();
     i2c_write_register(NFC_ADDRESS, NFC_GET_I2C_SESSION, NULL, 0);
     uint8_t data[] = {0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01};
@@ -17,19 +19,91 @@ void init_nfc() {
         .LE = 0
     };
 
-    c_apdu_r response;
+    uint8_t data_cc_select[] = {0xE1, 0x01, 0x00, 0x00, 0x85, 0x01, 0x01};
 
-    nfc_send_apdu_p(&select_ndef_tag_application);
+    c_apdu_t select_cc_file = {
+        .PCB = NFC_PCB_BYTE,
+        .CLA = 0,
+        .INS = NFC_INS_SELECT_FILE,
+        .P1 = 0x00,
+        .P2 = 0x0C,
+        .LC = 0x02,
+        .data = data_cc_select,
+        .LE = 0
+    };
+
+    uint8_t data_ndef_select[] = {0x00, 0x01, 0x00, 0x00, 0x85, 0x01, 0x01};
+
+    c_apdu_t select_ndef_file = {
+        .PCB = NFC_PCB_BYTE,
+        .CLA = 0,
+        .INS = NFC_INS_SELECT_FILE,
+        .P1 = 0x00,
+        .P2 = 0x0C,
+        .LC = 0x02,
+        .data = data_ndef_select,
+        .LE = 0
+    };
+
+    uint8_t data_pw[16] = {0x00};
+
+    c_apdu_t verify_pw = {
+        .PCB = NFC_PCB_BYTE,
+        .CLA = 0,
+        .INS = NFC_INS_VERIFY,
+        .P1 = 0x00,
+        .P2 = 0x03,
+        .LC = 0x10,
+        .data = data_pw,
+        .LE = 0
+    };
+
+    c_apdu_t read_binary = {
+        .PCB = NFC_PCB_BYTE,
+        .CLA = 0,
+        .INS = NFC_INS_READ_BINARY,
+        .P1 = 0x00,
+        .P2 = 0x00,
+        .LC = 0x00,
+        .data = data_cc_select,
+        .LE = 0x02 + 0xc
+    };
+
+    c_apdu_t disable_verification = {
+        .PCB = NFC_PCB_BYTE,
+        .CLA = 0,
+        .INS = NFC_DISABLE_VERIFICATION,
+        .P1 = 0x00,
+        .P2 = 0x01,
+        .LC = 0x00,
+        .data = data_cc_select,
+        .LE = 0x00
+    };
+
+    c_apdu_r response = {
+        .data = rdata_out
+    };
+    HAL_Delay(NFC_WAIT_MS_AFTER_CMD);
+    nfc_send_apdu_p(&select_ndef_tag_application, true);
     nfc_read_apdu_r(&response, select_ndef_tag_application.LE);
+
+    nfc_send_apdu_p(&select_ndef_file, false);
+    nfc_read_apdu_r(&response, select_ndef_file.LE);
+
+    nfc_send_apdu_p(&read_binary, true);
+    nfc_read_apdu_r(&response, read_binary.LE);
+    return;
 }
 
-void nfc_send_apdu_p(c_apdu_t* c_apdu_t_to_send) {
+void nfc_send_apdu_p(c_apdu_t* c_apdu_t_to_send, bool has_le) {
     uint16_t crc;
     CRC->CR |= CRC_CR_RESET;
     i2c_start_condition();
     i2c_master_write(NFC_ADDRESS);
     for (int i = 0; i < 6; i++)
     {
+        if (i == 5 && c_apdu_t_to_send->LC == 0)
+            break;
         i2c_master_write(((uint8_t *)c_apdu_t_to_send)[i]);
         Accu_CRC8(((uint8_t *)c_apdu_t_to_send)[i]);
     }
@@ -38,12 +112,16 @@ void nfc_send_apdu_p(c_apdu_t* c_apdu_t_to_send) {
         i2c_master_write(c_apdu_t_to_send->data[i]);
         Accu_CRC8(c_apdu_t_to_send->data[i]);
     }
-    i2c_master_write(c_apdu_t_to_send->LE);
-    Accu_CRC8(c_apdu_t_to_send->LE);
+    if (has_le) {
+        i2c_master_write(c_apdu_t_to_send->LE);
+        Accu_CRC8(c_apdu_t_to_send->LE);
+    }
     crc = CRC->DR;
+
     i2c_master_write(crc);
     i2c_master_write(crc >> 8);
     i2c_stop_condition();
+    HAL_Delay(NFC_WAIT_MS_AFTER_CMD);
 }
 
 void nfc_read_apdu_r(c_apdu_r* c_apdu_t_to_read, uint8_t LE) {
