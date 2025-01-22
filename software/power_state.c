@@ -1,6 +1,5 @@
 #include "power_state.h"
 
-LPTIM_HandleTypeDef hlptim1;
 volatile bool enter_sleep_mode = false;
 
 void power_enter_stop_mode()
@@ -76,31 +75,29 @@ void power_deinit_gpios() {
 
 void power_init_timeout_counter() {
   __HAL_RCC_LPTIM1_CLK_ENABLE();
-  hlptim1.Instance = LPTIM1;
-  hlptim1.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
-  hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV128;
-  hlptim1.Init.Trigger.Source = LPTIM_TRIGSOURCE_SOFTWARE;
-  hlptim1.Init.OutputPolarity = LPTIM_OUTPUTPOLARITY_HIGH;
-  hlptim1.Init.UpdateMode = LPTIM_UPDATE_IMMEDIATE;
-  hlptim1.Init.CounterSource = LPTIM_COUNTERSOURCE_INTERNAL;
-  HAL_LPTIM_Init(&hlptim1);
-  HAL_LPTIM_PWM_Start_IT(&hlptim1, (32768 / 128) * 3 + 1, (32768 / 128) * 3);
+
   HAL_NVIC_SetPriority(LPTIM1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
+  LPTIM1->CR = 0;
+  LPTIM1->IER = LPTIM_IER_CMPMIE;
+  LPTIM1->CFGR = LPTIM_CFGR_PRESC;
+  LPTIM1->CR = LPTIM_CR_ENABLE;
+  LPTIM1->ARR = (32768 / 128) * 3 + 1;
+  LPTIM1->CMP = (32768 / 128) * 3;
+  LPTIM1->CR = LPTIM_CR_ENABLE | LPTIM_CR_CNTSTRT;
 }
 
 void power_stop_timeout_counter() {
-  HAL_LPTIM_PWM_Stop_IT(&hlptim1);
+  LPTIM1->CR = 0;
   __HAL_RCC_LPTIM1_CLK_DISABLE();
 }
 
 void power_reset_timeout_counter() {
-  __HAL_TIM_SET_COUNTER(&hlptim1,0);  
+  LPTIM1->CNT = 0;
 }
 
-void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
+void power_timeout_counter_elapsed()
 {
-  UNUSED(hlptim);
   power_stop_timeout_counter();
   enter_sleep_mode = true;
 }

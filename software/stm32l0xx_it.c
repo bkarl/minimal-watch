@@ -148,7 +148,8 @@ void TIM2_IRQHandler(void)
 
 void LPTIM1_IRQHandler(void)
 {
-  HAL_LPTIM_IRQHandler(&hlptim1);
+  LPTIM1->ICR = LPTIM_ISR_CMPM;
+  power_timeout_counter_elapsed();
 }
 
 void EXTI2_3_IRQHandler(void)
