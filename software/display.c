@@ -22,8 +22,6 @@ pin_mapping_t row_pin_mapping_green[] = {
     {GPIO_PIN_3, GPIOA}
 };
 
-TIM_HandleTypeDef htim2;
-
 void display_init() {
     display_state.current_column = 0;
     display_init_gpio();
@@ -31,7 +29,7 @@ void display_init() {
 }
 
 void display_shutdown() {
-    HAL_TIM_Base_Stop_IT(&htim2);
+    TIM2->CR1 = 0;
     display_switch_all_off();
     __HAL_RCC_TIM2_CLK_DISABLE();
 }
@@ -46,8 +44,7 @@ void display_set_time()
     display_state.green_vals[1] = sTime.Minutes;
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-    UNUSED(htim);
+void display_update() {
     display_iterate_column();
 }
 
@@ -113,26 +110,15 @@ void display_init_gpio() {
 
 void display_init_timer()
 {
-    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-    TIM_MasterConfigTypeDef sMasterConfig = {0};
     __HAL_RCC_TIM2_CLK_ENABLE();
 
-    htim2.Instance = TIM2;
-    htim2.Init.Prescaler = 2400;
-    htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim2.Init.Period = 10;
-    htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    HAL_TIM_Base_Init(&htim2);
+    TIM2->DIER = TIM_DIER_UIE_Msk;
+    TIM2->SMCR = 0;
+    TIM2->PSC = 2400;
+    TIM2->ARR = 10;
+    TIM2->EGR = TIM_EGR_UG;
 
-    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-    HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig);
-
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig);
-
+    TIM2->CR1 = TIM_CR1_CEN_Msk;
     HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
-    HAL_TIM_Base_Start_IT(&htim2);
 }

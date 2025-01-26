@@ -17,8 +17,6 @@ typedef struct {
     GPIO_TypeDef* gpio;
 } pin_mapping_t;
 
-extern TIM_HandleTypeDef htim2;
-
 /*
 Display has the following structure:
 Row 0: LED 5 .... LED 0
@@ -52,3 +50,4 @@ void switch_row_color_if_enabled(pin_mapping_t *row_pin_mapping, uint8_t row_val
 void display_init_timer();
 void display_set_time();
 void display_shutdown();
+void display_update();

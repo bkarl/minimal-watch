@@ -1,7 +1,5 @@
 #include "i2c_bitbanging.h"
 
-TIM_HandleTypeDef htim21;
-
 void i2c_init() {
     i2c_init_gpio();
     i2c_init_delay_timer();
@@ -132,34 +130,20 @@ void i2c_init_gpio() {
 }
 
 void i2c_init_delay_timer() {
-    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-    TIM_MasterConfigTypeDef sMasterConfig = {0};
     __HAL_RCC_TIM21_CLK_ENABLE();
 
     /* USER CODE BEGIN TIM2_Init 1 */
-
-    /* USER CODE END TIM2_Init 1 */
-    htim21.Instance = TIM21;
-    htim21.Init.Prescaler = 24; //1 MHz clock rate
-    htim21.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim21.Init.Period = 10;
-    htim21.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim21.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-    HAL_TIM_Base_Init(&htim21);
-
-    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-    HAL_TIM_ConfigClockSource(&htim21, &sClockSourceConfig);
-
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    HAL_TIMEx_MasterConfigSynchronization(&htim21, &sMasterConfig);
-
-    HAL_TIM_Base_Start(&htim21);
+    TIM21->DIER = TIM_DIER_UIE_Msk;
+    TIM21->SMCR = 0;
+    TIM21->PSC = 24; //1 MHz clock rate
+    TIM21->ARR = 10;
+    TIM21->EGR = TIM_EGR_UG;
+    TIM21->CR1 = TIM_CR1_CEN_Msk;
 }
 
 void i2c_half_bit_delay() {
-    __HAL_TIM_SET_COUNTER(&htim21,0);  
-	while (__HAL_TIM_GET_COUNTER(&htim21) < 5);
+    TIM21->CNT = 0;
+	while (TIM21->CNT < 5);
 }
 
 void i2c_set_sda() { HAL_GPIO_WritePin(I2C_DO_PORT, I2C_SDA_PIN, GPIO_PIN_SET); }

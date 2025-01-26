@@ -143,7 +143,8 @@ void SysTick_Handler(void)
 
 void TIM2_IRQHandler(void)
 {
-  HAL_TIM_IRQHandler(&htim2);
+  TIM2->SR = ~TIM_DIER_UIE_Msk;
+  display_update();
 }
 
 void LPTIM1_IRQHandler(void)
