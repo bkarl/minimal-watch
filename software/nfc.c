@@ -1,8 +1,8 @@
 #include "nfc.h"
-
-CRC_HandleTypeDef hcrc;
+#include "power_state.h"
 
 void init_nfc() {
+    power_enable_light_nfc();
     uint8_t rdata_out[255];
 
     nfc_init_crc_engine();
@@ -19,20 +19,7 @@ void init_nfc() {
         .LE = 0
     };
 
-    uint8_t data_cc_select[] = {0xE1, 0x01, 0x00, 0x00, 0x85, 0x01, 0x01};
-
-    c_apdu_t select_cc_file = {
-        .PCB = NFC_PCB_BYTE,
-        .CLA = 0,
-        .INS = NFC_INS_SELECT_FILE,
-        .P1 = 0x00,
-        .P2 = 0x0C,
-        .LC = 0x02,
-        .data = data_cc_select,
-        .LE = 0
-    };
-
-    uint8_t data_ndef_select[] = {0x00, 0x01, 0x00, 0x00, 0x85, 0x01, 0x01};
+    uint8_t data_ndef_select[] = {0x00, 0x01};
 
     c_apdu_t select_ndef_file = {
         .PCB = NFC_PCB_BYTE,
@@ -45,17 +32,27 @@ void init_nfc() {
         .LE = 0
     };
 
-    uint8_t data_pw[16] = {0x00};
+    c_apdu_r response = {
+        .data = rdata_out
+    };
 
-    c_apdu_t verify_pw = {
-        .PCB = NFC_PCB_BYTE,
-        .CLA = 0,
-        .INS = NFC_INS_VERIFY,
-        .P1 = 0x00,
-        .P2 = 0x03,
-        .LC = 0x10,
-        .data = data_pw,
-        .LE = 0
+    HAL_Delay(NFC_WAIT_MS_AFTER_CMD);
+    nfc_send_apdu_p(&select_ndef_tag_application, true);
+    nfc_read_apdu_r(&response, select_ndef_tag_application.LE);
+
+    nfc_send_apdu_p(&select_ndef_file, false);
+    nfc_read_apdu_r(&response, select_ndef_file.LE);
+}
+
+void deinit_nfc() {
+    power_disable_light_nfc();
+}
+
+uint8_t nfc_read_total_ndef_length() {
+    uint8_t rdata_out[255];
+
+    c_apdu_r response = {
+        .data = rdata_out
     };
 
     c_apdu_t read_binary = {
@@ -65,34 +62,116 @@ void init_nfc() {
         .P1 = 0x00,
         .P2 = 0x00,
         .LC = 0x00,
-        .data = data_cc_select,
-        .LE = 0x02 + 0xc
+        .data = 0,
+        .LE = 0x02
     };
 
-    c_apdu_t disable_verification = {
-        .PCB = NFC_PCB_BYTE,
-        .CLA = 0,
-        .INS = NFC_DISABLE_VERIFICATION,
-        .P1 = 0x00,
-        .P2 = 0x01,
-        .LC = 0x00,
-        .data = data_cc_select,
-        .LE = 0x00
-    };
+    nfc_send_apdu_p(&read_binary, true);
+    nfc_read_apdu_r(&response, read_binary.LE);
+
+    uint8_t total_len = response.data[1];
+    return total_len;
+}
+
+bool nfc_read_timestamp_record(RTC_TimeTypeDef *sTime, RTC_DateTypeDef *sDate) {
+    uint8_t rdata_out[255];
 
     c_apdu_r response = {
         .data = rdata_out
     };
-    HAL_Delay(NFC_WAIT_MS_AFTER_CMD);
-    nfc_send_apdu_p(&select_ndef_tag_application, true);
-    nfc_read_apdu_r(&response, select_ndef_tag_application.LE);
 
-    nfc_send_apdu_p(&select_ndef_file, false);
-    nfc_read_apdu_r(&response, select_ndef_file.LE);
+    c_apdu_t read_binary = {
+        .PCB = NFC_PCB_BYTE,
+        .CLA = 0,
+        .INS = NFC_INS_READ_BINARY,
+        .P1 = 0x00,
+        .P2 = 0x02,
+        .LC = 0x00,
+        .data = 0,
+        .LE = 0x02
+    };
+
+    uint8_t total_len = nfc_read_total_ndef_length();
+
+    read_binary.P2 = 2;
+    read_binary.LE = total_len;
 
     nfc_send_apdu_p(&read_binary, true);
     nfc_read_apdu_r(&response, read_binary.LE);
-    return;
+    external_type_ndef_record_t *timestamp_record = (external_type_ndef_record_t*)response.data;
+    size_t offset_to_payload = timestamp_record->type_len + NUM_HEADER_BYTES_IN_NFC_PAYLOAD;
+
+    timestamp_record->payload = &response.data[offset_to_payload];
+    sDate->Year = timestamp_record->payload[OFFSET_TO_YEAR];
+    sDate->Month = timestamp_record->payload[OFFSET_TO_MONTH];
+    sDate->Date = timestamp_record->payload[OFFSET_TO_DAY];
+    sTime->Hours = timestamp_record->payload[OFFSET_TO_HOUR];
+    sTime->Minutes = timestamp_record->payload[OFFSET_TO_MINUTE];
+    sTime->Seconds = timestamp_record->payload[OFFSET_TO_SECOND];
+
+    return true;
+}
+
+void nfc_update_step_ctr_record(RTC_DateTypeDef *sDate, uint32_t n_steps) {
+    uint8_t total_len = nfc_read_total_ndef_length();
+    uint8_t rdata_out[255];
+
+    c_apdu_r response = {
+        .data = rdata_out
+    };
+
+    uint8_t new_record[8] = {sDate->Year, sDate->Month, sDate->Date, n_steps, n_steps >> 8, n_steps >> 16, n_steps >> 24};
+
+    c_apdu_t update_binary = {
+        .PCB = NFC_PCB_BYTE,
+        .CLA = 0,
+        .INS = NFC_INS_UPDATE_BINARY,
+        .P1 = 0x00,
+        .P2 = 0x02 + total_len,
+        .LC = 0x08,
+        .data = new_record,
+        .LE = 0
+    };
+
+    if (total_len < NFC_STEP_RECORD_MIN_LENGTH) {
+        nfc_write_step_ctr_message(sDate, n_steps);
+        return;
+    }
+
+    nfc_send_apdu_p(&update_binary, false);
+    nfc_read_apdu_r(&response, update_binary.LE);
+}
+
+void nfc_write_step_ctr_message(RTC_DateTypeDef *sDate, uint32_t n_steps) {
+    uint8_t rdata_out[255];
+
+    c_apdu_r response = {
+        .data = rdata_out
+    };
+
+    initial_external_type_ndef_record_t new_record = {.total_message_len = sizeof(initial_external_type_ndef_record_t), .id_byte = NDEF_HEADER, .type_len = EXTERNAL_TYPE_LEN_STEPS, .external_type = EXTERNAL_TYPE_STEPS};
+
+    new_record.payload[0] = sDate->Year;
+    new_record.payload[1] = sDate->Month;
+    new_record.payload[2] = sDate->Date;
+    new_record.payload[3] = n_steps;
+    new_record.payload[4] = n_steps >> 8;
+    new_record.payload[5] = n_steps >> 16;
+    new_record.payload[6] = n_steps >> 24;
+
+    c_apdu_t update_binary = {
+        .PCB = NFC_PCB_BYTE,
+        .CLA = 0,
+        .INS = NFC_INS_UPDATE_BINARY,
+        .P1 = 0x00,
+        .P2 = 0x00,
+        .LC = new_record.total_message_len,
+        .data = (uint8_t*)&new_record,
+        .LE = 0
+    };
+
+    nfc_send_apdu_p(&update_binary, false);
+    nfc_read_apdu_r(&response, update_binary.LE);
 }
 
 void nfc_send_apdu_p(c_apdu_t* c_apdu_t_to_send, bool has_le) {
@@ -147,14 +226,4 @@ void nfc_init_crc_engine() {
     CRC->INIT = 0xC6C6;
     CRC->POL = 0x1021;
     CRC->CR = CRC_CR_REV_OUT | CRC_CR_REV_IN_0 | CRC_CR_POLYSIZE_0;
-
-    /*
-    Example from the DS, CRC must be 0xC035
-    uint8_t din[] = {0x02, 0x00, 0xA4, 0x04, 0x00, 0x07, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01, 0x00};
-    for (unsigned i = 0; i < sizeof(din); i++) {
-        //CRC->DR = din[i];
-        Accu_CRC8(din[i]);
-    }
-    dout = CRC->DR;
-    */
 }
