@@ -26,3 +26,12 @@ void bma400_clear_interrupt_status() {
     i2c_read_register(BMA400_ADDRESS, BMA400_ACC_INT_STAT0_ADDRESS, int_stat, 3);
     return;
 }
+
+uint32_t bma400_read_step_cnt() {
+    uint8_t raw_step_cnt[3];
+    uint8_t cmd_reset = BMA400_CMD_RST_STEP_CNT;
+    i2c_read_register(BMA400_ADDRESS, BMA400_ACC_STEP_CNT0_ADDRESS, raw_step_cnt, 3);
+    uint32_t step_cnt = raw_step_cnt[0] + ((uint32_t)raw_step_cnt[1] << 8) + ((uint32_t)raw_step_cnt[2] << 16);
+    i2c_write_register(BMA400_ADDRESS, BMA400_CMD_ADDRESS, &cmd_reset, 1);
+    return step_cnt;
+}

@@ -7,25 +7,19 @@
 #include "bma400.h"
 #include "nfc.h"
 
+extern uint8_t wakeup_reason;
+
 void SystemClock_Config(void);
+void check_pending_task();
 
 int main(void)
-{
-  HAL_Init();
-  SystemClock_Config();
-  __enable_irq();
-  power_disable_light_nfc();
-
-  power_enable_light_nfc();
-  i2c_init();
-  init_nfc();
-  while(1);
-  /*
+{  
   while (1)
   {
-    rtc_init();
-    rtc_reset_time();
-    bma400_init();
+    HAL_Init();
+    SystemClock_Config();
+    __enable_irq();
+    check_pending_task();
     interrupts_init();
     power_init_timeout_counter();
     display_set_time();
@@ -35,7 +29,22 @@ int main(void)
     power_enter_stop_mode();
     power_leave_stop_mode();
   }
-  */
+}
+
+void check_pending_task() {
+  switch (wakeup_reason) {
+    case WAKEUP_REASON_NONE:
+      i2c_init();
+      rtc_init();
+      bma400_init();
+      break;
+
+    case WAKEUP_REASON_NFC:
+      i2c_init();
+      init_nfc();
+      rtc_set_time_from_nfc();
+      break;
+  }
 }
 
 void SystemClock_Config(void)

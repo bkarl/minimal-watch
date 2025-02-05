@@ -1,4 +1,5 @@
 #include "rtc.h"
+#include "nfc.h"
 
 RTC_HandleTypeDef hrtc;
 
@@ -30,6 +31,19 @@ void rtc_reset_time() {
   sDate.Date = 0x1;
   sDate.Year = 0x0;
 
+  HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+}
+
+void rtc_set_time_from_nfc() {
+  RTC_TimeTypeDef sTime = {0};
+  RTC_DateTypeDef sDate = {0};
+
+  if (!nfc_read_timestamp_record(&sTime, &sDate))
+    return;
+
+  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
   HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
 }
 /*

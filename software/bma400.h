@@ -16,6 +16,7 @@
 #define BMA400_INT2_MAP_ADDRESS         0x22
 #define BMA400_INT12_MAP_ADDRESS        0x23
 #define BMA400_INT12_IO_CTRL_ADDRESS    0x24
+#define BMA400_CMD_ADDRESS              0x7E
 
 #define BMA400_ACC_CONFIG0_DATA         0x02 //enable normal mode
 #define BMA400_ACC_CONFIG1_DATA         0x19 //acc_range = 0, osr = 1, acc_odr = 200 Hz
@@ -27,6 +28,8 @@
 #define BMA400_INT_MAP2_DATA            0x00
 #define BMA400_INT_MAP12_DATA           0x40 //tap sensing interrupt is mapped to INT2
 #define BMA400_INT12_IO_CTRL_DATA       0x20 //interrupt pin INT2 high-active, pp
+
+#define BMA400_CMD_RST_STEP_CNT         0xB1
 
 uint8_t bma400_get_chip_id();
 void bma400_init();

@@ -22,3 +22,5 @@ void i2c_init_delay_timer();
 void i2c_init();
 void i2c_read_register(uint8_t address, uint8_t reg_address, uint8_t* dout, uint8_t n_read);
 void i2c_write_register(uint8_t address, uint8_t reg_address, uint8_t* din, uint8_t n_write);
+void i2c_deinit();
+void i2c_disable_delay_timer();

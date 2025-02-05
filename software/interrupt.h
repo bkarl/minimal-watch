@@ -15,5 +15,13 @@
 #define BUTTON_1_PIN GPIO_PIN_4 //Bottom left
 #define BUTTON_2_PIN GPIO_PIN_3 // Bottom right
 
+enum WAKEUP_REASON {
+    WAKEUP_REASON_NONE,
+    WAKEUP_REASON_NFC,
+    WAKEUP_REASON_BUTTON,
+    WAKEUP_REASON_DOUBLE_TAP,
+    WAKEUP_REASON_ALARM
+};
+
 void interrupts_init();
 void interrupts_init_gpio();

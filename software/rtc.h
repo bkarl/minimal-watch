@@ -6,3 +6,4 @@ extern RTC_HandleTypeDef hrtc;
 
 void rtc_init(void);
 void rtc_reset_time();
+void rtc_set_time_from_nfc();

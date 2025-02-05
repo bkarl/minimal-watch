@@ -5,6 +5,11 @@ void i2c_init() {
     i2c_init_delay_timer();
 }
 
+void i2c_deinit() {
+    i2c_disable_delay_timer();
+}
+
+
 void i2c_read_register(uint8_t address, uint8_t reg_address, uint8_t* dout, uint8_t n_read) {
     i2c_start_condition();
     i2c_master_write(address);
@@ -124,7 +129,7 @@ void i2c_init_gpio() {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Pin = I2C_SDA_PIN | I2C_SCL_PIN;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
@@ -139,6 +144,11 @@ void i2c_init_delay_timer() {
     TIM21->ARR = 10;
     TIM21->EGR = TIM_EGR_UG;
     TIM21->CR1 = TIM_CR1_CEN_Msk;
+}
+
+void i2c_disable_delay_timer() {
+    TIM21->CR1 = 0;
+    __HAL_RCC_TIM21_CLK_ENABLE();
 }
 
 void i2c_half_bit_delay() {
