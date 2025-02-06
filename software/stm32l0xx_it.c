@@ -22,6 +22,8 @@
 #include "stm32l0xx_it.h"
 #include "display.h"
 #include "power_state.h"
+#include "rtc.h"
+#include "interrupt.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -179,4 +181,9 @@ void EXTI4_15_IRQHandler(void)
   /* USER CODE BEGIN EXTI4_15_IRQn 1 */
 
   /* USER CODE END EXTI4_15_IRQn 1 */
+}
+
+void RTC_IRQHandler() {
+  HAL_RTC_AlarmIRQHandler(&hrtc);
+  wakeup_reason = WAKEUP_REASON_ALARM;
 }

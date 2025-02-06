@@ -1,6 +1,7 @@
 #pragma once
 #include "stm32l0xx_hal_conf.h"
 #include "stm32l0xx_hal.h"
+#include <stdbool.h>
 
 #define BMA400_ADDRESS                  0x28 //0b00101000
 #define BMA400_CHIPID_ADDRESS           0x00
@@ -34,3 +35,5 @@
 uint8_t bma400_get_chip_id();
 void bma400_init();
 void bma400_clear_interrupt_status();
+uint32_t bma400_read_step_cnt(bool clear_ctr);
+void bma400_write_step_ctr_value_to_nfc(bool clear_ctr);

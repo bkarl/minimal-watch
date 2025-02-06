@@ -7,7 +7,6 @@
 #include "bma400.h"
 #include "nfc.h"
 
-extern uint8_t wakeup_reason;
 
 void SystemClock_Config(void);
 void check_pending_task();
@@ -36,6 +35,7 @@ void check_pending_task() {
     case WAKEUP_REASON_NONE:
       i2c_init();
       rtc_init();
+      rtc_set_alarm();
       bma400_init();
       break;
 
@@ -44,7 +44,14 @@ void check_pending_task() {
       init_nfc();
       rtc_set_time_from_nfc();
       break;
+
+    case WAKEUP_REASON_ALARM:
+      i2c_init();
+      init_nfc();
+      bma400_write_step_ctr_value_to_nfc(false);
+      break;
   }
+  wakeup_reason = WAKEUP_REASON_NONE;
 }
 
 void SystemClock_Config(void)

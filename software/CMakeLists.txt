@@ -39,6 +39,7 @@ target_link_libraries(minimal-watch
     HAL::STM32::L0::PWR
     HAL::STM32::L0::PWREx
     HAL::STM32::L0::RTC
+    HAL::STM32::L0::RTCEx
     HAL::STM32::L0::TIM
     HAL::STM32::L0::TIMEx
     CMSIS::STM32::L011G4

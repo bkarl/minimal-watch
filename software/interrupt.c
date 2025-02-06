@@ -1,7 +1,7 @@
 #include "interrupt.h"
 #include "rtc.h"
 
-volatile uint8_t wakeup_reason;
+volatile uint8_t wakeup_reason = WAKEUP_REASON_NONE;
 
 void interrupts_init() {
     wakeup_reason = WAKEUP_REASON_NONE;
@@ -53,7 +53,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
             break;
         
         case BUTTON_2_PIN: 
-            wakeup_reason = WAKEUP_REASON_BUTTON;
+            wakeup_reason = WAKEUP_REASON_CHECK_STEPS;
             break;
 
         case NFC_INT_PIN:

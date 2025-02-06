@@ -1,5 +1,7 @@
 #include "bma400.h"
 #include "i2c_bitbanging.h"
+#include "rtc.h"
+#include "nfc.h"
 
 uint8_t bma400_get_chip_id() {
     uint8_t chid;
@@ -27,11 +29,19 @@ void bma400_clear_interrupt_status() {
     return;
 }
 
-uint32_t bma400_read_step_cnt() {
+void bma400_write_step_ctr_value_to_nfc(bool clear_ctr) {
+    RTC_DateTypeDef sDate;
+    HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+    uint32_t steps = bma400_read_step_cnt(clear_ctr);
+    nfc_update_step_ctr_record(&sDate, steps);
+}
+
+uint32_t bma400_read_step_cnt(bool clear_ctr) {
     uint8_t raw_step_cnt[3];
     uint8_t cmd_reset = BMA400_CMD_RST_STEP_CNT;
     i2c_read_register(BMA400_ADDRESS, BMA400_ACC_STEP_CNT0_ADDRESS, raw_step_cnt, 3);
     uint32_t step_cnt = raw_step_cnt[0] + ((uint32_t)raw_step_cnt[1] << 8) + ((uint32_t)raw_step_cnt[2] << 16);
-    i2c_write_register(BMA400_ADDRESS, BMA400_CMD_ADDRESS, &cmd_reset, 1);
+    if (clear_ctr)
+        i2c_write_register(BMA400_ADDRESS, BMA400_CMD_ADDRESS, &cmd_reset, 1);
     return step_cnt;
 }
