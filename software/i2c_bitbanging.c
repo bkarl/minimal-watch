@@ -148,7 +148,7 @@ void i2c_init_delay_timer() {
 
 void i2c_disable_delay_timer() {
     TIM21->CR1 = 0;
-    __HAL_RCC_TIM21_CLK_ENABLE();
+    __HAL_RCC_TIM21_CLK_DISABLE();
 }
 
 void i2c_half_bit_delay() {
