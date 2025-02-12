@@ -46,15 +46,20 @@ typedef struct __attribute__((packed)) {
 
 #define EXTERNAL_TYPE_STEPS  "minimal.watch:steps"
 #define EXTERNAL_TYPE_LEN_STEPS sizeof(EXTERNAL_TYPE_STEPS) - 1
+#define STEP_CTR_RECORD_SIZE_BYTES 7
+
 typedef struct __attribute__((packed)) {
     uint8_t id_byte;
     uint8_t type_len;
     uint8_t payload_len;
     char external_type[EXTERNAL_TYPE_LEN_STEPS];
-    uint8_t payload[7];
+    uint8_t payload[STEP_CTR_RECORD_SIZE_BYTES];
 } initial_external_type_ndef_record_t;
 
+
 #define NFC_STEP_RECORD_MIN_LENGTH sizeof(initial_external_type_ndef_record_t)
+#define NFC_OFFSET_TO_NDEF_MESSAGE 2
+#define NFC_OFFSET_TO_NDEF_STEPS_PAYLOAD_LEN offsetof(initial_external_type_ndef_record_t, payload_len) + NFC_OFFSET_TO_NDEF_MESSAGE
 
 #define OFFSET_TO_YEAR 0
 #define OFFSET_TO_MONTH 1
@@ -63,14 +68,14 @@ typedef struct __attribute__((packed)) {
 #define OFFSET_TO_MINUTE 4
 #define OFFSET_TO_SECOND 5
 
-#define NFC_OFFSET_TO_NDEF_MESSAGE 2
+
 
 void init_nfc();
 void nfc_init_crc_engine();
 void nfc_send_apdu_p(c_apdu_t* c_apdu_t_to_send, bool has_le);
 void nfc_read_apdu_r(c_apdu_r* c_apdu_t_to_read, uint8_t LE);
 void nfc_write_step_ctr_message(RTC_DateTypeDef *sDate, uint32_t n_steps);
-void nfc_update_step_ctr_record(RTC_DateTypeDef *sDate, uint32_t n_steps);
+void nfc_update_step_ctr_record(RTC_DateTypeDef *sDate, uint32_t n_steps, bool append_new_record);
 bool nfc_read_timestamp_record(RTC_TimeTypeDef *sTime, RTC_DateTypeDef *sDate);
 void nfc_read_data_from_memory(uint8_t *dst, uint8_t offset, uint8_t len);
 void nfc_clear_ndef_message();
@@ -78,4 +83,4 @@ void nfc_clear_ndef_message();
 #define NFC_INT_PIN GPIO_PIN_9
 #define NFC_INT_PORT GPIOB
 
-#define NDEF_HEADER 0b11010100 //first record in NDEF message, last in message, short record, no ID length, TNF 4 (external)
+#define NDEF_HEADER 0xD4 //0b11010100 first record in NDEF message, last in message, short record, no ID length, TNF 4 (external)

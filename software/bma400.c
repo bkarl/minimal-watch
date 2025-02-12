@@ -3,6 +3,8 @@
 #include "rtc.h"
 #include "nfc.h"
 
+bool append_new_step_counter_record = true;
+
 uint8_t bma400_get_chip_id() {
     uint8_t chid;
     i2c_read_register(BMA400_ADDRESS, BMA400_CHIPID_ADDRESS, &chid, 1);
@@ -33,7 +35,8 @@ void bma400_write_step_ctr_value_to_nfc(bool clear_ctr) {
     RTC_DateTypeDef sDate;
     HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
     uint32_t steps = bma400_read_step_cnt(clear_ctr);
-    nfc_update_step_ctr_record(&sDate, steps);
+    nfc_update_step_ctr_record(&sDate, steps, append_new_step_counter_record);
+    append_new_step_counter_record = false;
 }
 
 uint32_t bma400_read_step_cnt(bool clear_ctr) {

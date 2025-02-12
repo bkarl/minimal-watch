@@ -20,9 +20,9 @@ void rtc_reset_time() {
   RTC_TimeTypeDef sTime = {0};
   RTC_DateTypeDef sDate = {0};
 
-  sTime.Hours = 5;
-  sTime.Minutes = 45;
-  sTime.Seconds = 0x0;
+  sTime.Hours = 23;
+  sTime.Minutes = 54;
+  sTime.Seconds = 40;
   sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
   sTime.StoreOperation = RTC_STOREOPERATION_RESET;
   HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
@@ -60,8 +60,8 @@ void rtc_set_alarm() {
 	sAlarm.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
 	sAlarm.AlarmDateWeekDay = 1;
 	sAlarm.Alarm = RTC_ALARM_A;
-	if (HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BIN) != HAL_OK)
-	{
-		Error_Handler();
-	}
+	HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BIN);
+
+  HAL_NVIC_SetPriority(RTC_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(RTC_IRQn);
 }

@@ -1,6 +1,9 @@
 #include "nfc.h"
 #include "power_state.h"
 
+void nfc_copy_step_ctr_payload(uint8_t *dst_buffer, RTC_DateTypeDef *sDate, uint32_t n_steps);
+void nfc_write_data_to_memory(uint8_t *data, uint8_t offset, uint8_t len);
+
 void init_nfc() {
     power_enable_light_nfc();
     uint8_t rdata_out[255];
@@ -115,43 +118,83 @@ bool nfc_read_timestamp_record(RTC_TimeTypeDef *sTime, RTC_DateTypeDef *sDate) {
     return true;
 }
 
-void nfc_update_step_ctr_record(RTC_DateTypeDef *sDate, uint32_t n_steps) {
-    uint8_t old_ndef[32] = {0};
+void nfc_update_step_ctr_record(RTC_DateTypeDef *sDate, uint32_t n_steps, bool append_new_record) {
     uint8_t total_len = nfc_read_total_ndef_length();
 
-    nfc_read_data_from_memory(old_ndef, 0, total_len+2);
     nfc_clear_ndef_message();
-    //if (total_len < NFC_STEP_RECORD_MIN_LENGTH) {
-    
+    if (total_len < NFC_STEP_RECORD_MIN_LENGTH) {
         nfc_write_step_ctr_message(sDate, n_steps);
         return;
-    //}
+    }
+
+    uint8_t new_size = total_len + STEP_CTR_RECORD_SIZE_BYTES;
+    uint8_t new_payload_len;
+    uint8_t new_record[STEP_CTR_RECORD_SIZE_BYTES];
+    uint8_t write_offset = total_len;
+
+    if (!append_new_record)
+        write_offset -= STEP_CTR_RECORD_SIZE_BYTES;
+
+    nfc_read_data_from_memory(&new_payload_len, NFC_OFFSET_TO_NDEF_STEPS_PAYLOAD_LEN, 1);
+    new_payload_len += STEP_CTR_RECORD_SIZE_BYTES;
+    nfc_copy_step_ctr_payload(new_record, sDate, n_steps);
+    nfc_write_data_to_memory(new_record, write_offset, STEP_CTR_RECORD_SIZE_BYTES);
+
+    if (append_new_record) {
+        nfc_write_data_to_memory(&new_payload_len, NFC_OFFSET_TO_NDEF_STEPS_PAYLOAD_LEN, 1);
+        nfc_write_data_to_memory(&new_size, 1, 1);
+    }
 }
 
 void nfc_write_data_to_memory(uint8_t *data, uint8_t offset, uint8_t len) {
     c_apdu_r response;
-    static uint8_t block_number = 0x00;
+    //static uint8_t block_number = 0x00;
     c_apdu_t update_binary = {
         .PCB = NFC_PCB_BYTE,
         .CLA = 0,
         .INS = NFC_INS_UPDATE_BINARY,
         .P1 = 0x00,
-        .P2 = offset,
-        .LC = len,
-        .data = data,
+        .P2 = 0,
+        .LC = 0,
+        .data = 0,
         .LE = 0
     };
 
     //block_number ^= 1;
+    uint8_t n_bytes_written = 0;
+    uint8_t current_address = offset;
 
-    nfc_send_apdu_p(&update_binary, false);
-    nfc_read_apdu_r(&response, update_binary.LE);
-    return;
+    //https://community.st.com/t5/st25-nfc-rfid-tags-and-readers/m24sr64-we-can-only-write-to-the-ndef-file-within-16-byte-blocks/
+    while(n_bytes_written < len) {
+        uint8_t n_bytes_to_write = 16 - (current_address % 16);
+        if (n_bytes_to_write > len)
+            n_bytes_to_write = len;
+
+        update_binary.P2 = current_address;
+        update_binary.LC = n_bytes_to_write;
+        update_binary.data = data + n_bytes_written;
+
+        nfc_send_apdu_p(&update_binary, false);
+        nfc_read_apdu_r(&response, update_binary.LE);
+
+        current_address += n_bytes_to_write;
+        n_bytes_written += n_bytes_to_write;
+    }
 }
 
 void nfc_clear_ndef_message() {
     uint8_t len_field[2] = {0};
     nfc_write_data_to_memory(len_field, 0, sizeof(len_field));
+}
+
+void nfc_copy_step_ctr_payload(uint8_t *dst_buffer, RTC_DateTypeDef *sDate, uint32_t n_steps) {
+    dst_buffer[0] = sDate->Year;
+    dst_buffer[1] = sDate->Month;
+    dst_buffer[2] = sDate->Date;
+    dst_buffer[3] = n_steps;
+    dst_buffer[4] = n_steps >> 8;
+    dst_buffer[5] = n_steps >> 16;
+    dst_buffer[6] = n_steps >> 24;
 }
 
 void nfc_write_step_ctr_message(RTC_DateTypeDef *sDate, uint32_t n_steps) {
@@ -163,18 +206,9 @@ void nfc_write_step_ctr_message(RTC_DateTypeDef *sDate, uint32_t n_steps) {
                                                         .external_type = EXTERNAL_TYPE_STEPS
                                                     };
     uint8_t new_total_len[2] = {0, sizeof(new_record)};
+    nfc_copy_step_ctr_payload(new_record.payload, sDate, n_steps);
 
-    new_record.payload[0] = sDate->Year;
-    new_record.payload[1] = sDate->Month;
-    new_record.payload[2] = sDate->Date;
-    new_record.payload[3] = n_steps;
-    new_record.payload[4] = n_steps >> 8;
-    new_record.payload[5] = n_steps >> 16;
-    new_record.payload[6] = n_steps >> 24;
-
-    //https://community.st.com/t5/st25-nfc-rfid-tags-and-readers/m24sr64-we-can-only-write-to-the-ndef-file-within-16-byte-blocks/
-    nfc_write_data_to_memory((uint8_t*)&new_record, NFC_OFFSET_TO_NDEF_MESSAGE, 14);
-    nfc_write_data_to_memory(((uint8_t*)&new_record) + 14, NFC_OFFSET_TO_NDEF_MESSAGE + 14, 15);
+    nfc_write_data_to_memory((uint8_t*)&new_record, NFC_OFFSET_TO_NDEF_MESSAGE, sizeof(new_record));
     nfc_write_data_to_memory(new_total_len, 0, sizeof(new_total_len));
 }
 

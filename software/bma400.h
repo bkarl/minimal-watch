@@ -37,3 +37,5 @@ void bma400_init();
 void bma400_clear_interrupt_status();
 uint32_t bma400_read_step_cnt(bool clear_ctr);
 void bma400_write_step_ctr_value_to_nfc(bool clear_ctr);
+
+extern bool append_new_step_counter_record;
