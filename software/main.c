@@ -58,6 +58,11 @@ void check_pending_task() {
       bma400_write_step_ctr_value_to_nfc(true);
       append_new_step_counter_record = true;
       break;
+
+    default:
+    break;
+      //bma400_write_step_ctr_value_to_nfc(false);
+
   }
   wakeup_reason = WAKEUP_REASON_NONE;
 }

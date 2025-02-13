@@ -71,6 +71,7 @@ typedef struct __attribute__((packed)) {
 
 
 void init_nfc();
+void deinit_nfc();
 void nfc_init_crc_engine();
 void nfc_send_apdu_p(c_apdu_t* c_apdu_t_to_send, bool has_le);
 void nfc_read_apdu_r(c_apdu_r* c_apdu_t_to_read, uint8_t LE);

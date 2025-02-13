@@ -121,7 +121,9 @@ bool nfc_read_timestamp_record(RTC_TimeTypeDef *sTime, RTC_DateTypeDef *sDate) {
 void nfc_update_step_ctr_record(RTC_DateTypeDef *sDate, uint32_t n_steps, bool append_new_record) {
     uint8_t total_len = nfc_read_total_ndef_length();
 
-    nfc_clear_ndef_message();
+    uint8_t full_msg[100];
+    nfc_read_data_from_memory(full_msg, 2, total_len);
+
     if (total_len < NFC_STEP_RECORD_MIN_LENGTH) {
         nfc_write_step_ctr_message(sDate, n_steps);
         return;
@@ -138,7 +140,8 @@ void nfc_update_step_ctr_record(RTC_DateTypeDef *sDate, uint32_t n_steps, bool a
     nfc_read_data_from_memory(&new_payload_len, NFC_OFFSET_TO_NDEF_STEPS_PAYLOAD_LEN, 1);
     new_payload_len += STEP_CTR_RECORD_SIZE_BYTES;
     nfc_copy_step_ctr_payload(new_record, sDate, n_steps);
-    nfc_write_data_to_memory(new_record, write_offset, STEP_CTR_RECORD_SIZE_BYTES);
+    nfc_clear_ndef_message();
+    nfc_write_data_to_memory(new_record, write_offset + NFC_OFFSET_TO_NDEF_MESSAGE, STEP_CTR_RECORD_SIZE_BYTES);
 
     if (append_new_record) {
         nfc_write_data_to_memory(&new_payload_len, NFC_OFFSET_TO_NDEF_STEPS_PAYLOAD_LEN, 1);
@@ -167,8 +170,9 @@ void nfc_write_data_to_memory(uint8_t *data, uint8_t offset, uint8_t len) {
     //https://community.st.com/t5/st25-nfc-rfid-tags-and-readers/m24sr64-we-can-only-write-to-the-ndef-file-within-16-byte-blocks/
     while(n_bytes_written < len) {
         uint8_t n_bytes_to_write = 16 - (current_address % 16);
-        if (n_bytes_to_write > len)
-            n_bytes_to_write = len;
+        uint8_t remaining_bytes_to_write = len - n_bytes_written;
+        if (n_bytes_to_write > remaining_bytes_to_write)
+            n_bytes_to_write = remaining_bytes_to_write;
 
         update_binary.P2 = current_address;
         update_binary.LC = n_bytes_to_write;
@@ -207,7 +211,7 @@ void nfc_write_step_ctr_message(RTC_DateTypeDef *sDate, uint32_t n_steps) {
                                                     };
     uint8_t new_total_len[2] = {0, sizeof(new_record)};
     nfc_copy_step_ctr_payload(new_record.payload, sDate, n_steps);
-
+    nfc_clear_ndef_message();
     nfc_write_data_to_memory((uint8_t*)&new_record, NFC_OFFSET_TO_NDEF_MESSAGE, sizeof(new_record));
     nfc_write_data_to_memory(new_total_len, 0, sizeof(new_total_len));
 }
