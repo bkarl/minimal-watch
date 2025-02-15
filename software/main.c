@@ -21,49 +21,42 @@ int main(void)
     check_pending_task();
     interrupts_init();
     power_init_timeout_counter();
-    display_set_time();
     display_init();
-    while(true);
-    /*
-    while (enter_sleep_mode == false);
+    while (!enter_sleep_mode);
     display_shutdown();
     power_enter_stop_mode();
     power_leave_stop_mode();
-    */
   }
 }
 
 void check_pending_task() {
   i2c_init();
-  init_nfc();
-  bma400_write_step_ctr_value_to_nfc(false);
-  deinit_nfc();
-  return;
+  //init_nfc();
   switch (wakeup_reason) {
     case WAKEUP_REASON_NONE:
-      i2c_init();
       rtc_init();
       rtc_reset_time();
       rtc_set_alarm();
-      //bma400_init();
+      bma400_init();
       break;
 
     case WAKEUP_REASON_NFC:
-      i2c_init();
-      init_nfc();
       //rtc_set_time_from_nfc();
       break;
 
     case WAKEUP_REASON_ALARM:
-      bma400_write_step_ctr_value_to_nfc(true);
+      //bma400_write_step_ctr_value_to_nfc(true);
       append_new_step_counter_record = true;
       break;
 
     default:
-    break;
+      break;
       //bma400_write_step_ctr_value_to_nfc(false);
 
   }
+
+  //deinit_nfc();
+  i2c_deinit();
   wakeup_reason = WAKEUP_REASON_NONE;
 }
 

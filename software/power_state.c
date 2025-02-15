@@ -1,4 +1,5 @@
 #include "power_state.h"
+#include "settings.h"
 
 volatile bool enter_sleep_mode = false;
 
@@ -80,8 +81,8 @@ void power_init_timeout_counter() {
   LPTIM1->IER = LPTIM_IER_CMPMIE;
   LPTIM1->CFGR = LPTIM_CFGR_PRESC;
   LPTIM1->CR = LPTIM_CR_ENABLE;
-  LPTIM1->ARR = (32768 / 128) * 3 + 1;
-  LPTIM1->CMP = (32768 / 128) * 3;
+  LPTIM1->ARR = (32768 / 128) * DISPLAY_TIMEOUT_SECONDS + 1;
+  LPTIM1->CMP = (32768 / 128) * DISPLAY_TIMEOUT_SECONDS;
   LPTIM1->CR = LPTIM_CR_ENABLE | LPTIM_CR_CNTSTRT;
 }
 

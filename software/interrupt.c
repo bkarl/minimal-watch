@@ -61,7 +61,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
             break;
                 
         case BMA_400_INT2_PIN: 
-            wakeup_reason = WAKEUP_REASON_NFC;
+            wakeup_reason = WAKEUP_REASON_DOUBLE_TAP;
             break;
     }
 }

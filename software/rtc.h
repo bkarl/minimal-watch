@@ -8,3 +8,4 @@ void rtc_init(void);
 void rtc_reset_time();
 void rtc_set_time_from_nfc();
 void rtc_set_alarm();
+void rtc_disable_second_alarm();

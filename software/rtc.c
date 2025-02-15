@@ -1,5 +1,6 @@
 #include "rtc.h"
 #include "nfc.h"
+#include "interrupt.h"
 
 RTC_HandleTypeDef hrtc;
 
@@ -60,8 +61,22 @@ void rtc_set_alarm() {
 	sAlarm.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
 	sAlarm.AlarmDateWeekDay = 1;
 	sAlarm.Alarm = RTC_ALARM_A;
+
+
+	//HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BIN);
+
+  sAlarm.Alarm = RTC_ALARM_B;
+  sAlarm.AlarmMask = RTC_ALARMMASK_ALL;
 	HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BIN);
 
   HAL_NVIC_SetPriority(RTC_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(RTC_IRQn);
+}
+
+void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc) {
+  wakeup_reason = WAKEUP_REASON_ALARM;
+}
+
+void rtc_disable_second_alarm() {
+  HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_B);
 }

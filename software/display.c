@@ -26,12 +26,14 @@ void display_init() {
     display_state.current_column = 0;
     display_init_gpio();
     display_init_timer();
+    display_set_time();
 }
 
 void display_shutdown() {
     TIM2->CR1 = 0;
     display_switch_all_off();
     __HAL_RCC_TIM2_CLK_DISABLE();
+    rtc_disable_second_alarm();
 }
 
 void display_set_time()
@@ -121,4 +123,9 @@ void display_init_timer()
     TIM2->CR1 = TIM_CR1_CEN_Msk;
     HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
+}
+
+void HAL_RTCEx_AlarmBEventCallback(RTC_HandleTypeDef *hrtc) {
+    UNUSED(hrtc);
+    display_set_time();
 }
