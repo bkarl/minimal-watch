@@ -185,5 +185,4 @@ void EXTI4_15_IRQHandler(void)
 
 void RTC_IRQHandler() {
   HAL_RTC_AlarmIRQHandler(&hrtc);
-  wakeup_reason = WAKEUP_REASON_ALARM;
 }

@@ -3,6 +3,7 @@
 
 void nfc_copy_step_ctr_payload(uint8_t *dst_buffer, RTC_DateTypeDef *sDate, uint32_t n_steps);
 void nfc_write_data_to_memory(uint8_t *data, uint8_t offset, uint8_t len);
+void nfc_set_int_to_wip_mode();
 
 void init_nfc() {
     power_enable_light_nfc();
@@ -40,11 +41,59 @@ void init_nfc() {
     };
 
     HAL_Delay(NFC_WAIT_MS_AFTER_CMD);
+
     nfc_send_apdu_p(&select_ndef_tag_application, true);
     nfc_read_apdu_r(&response, select_ndef_tag_application.LE);
 
+    //nfc_set_int_to_wip_mode();
+
     nfc_send_apdu_p(&select_ndef_file, false);
     nfc_read_apdu_r(&response, select_ndef_file.LE);
+}
+
+void nfc_set_int_to_wip_mode() {
+    c_apdu_r response;
+
+    uint8_t data_ndef_select[] = {0xE1, 0x01};
+
+    c_apdu_t select_system_file = {
+        .PCB = NFC_PCB_BYTE,
+        .CLA = 0,
+        .INS = NFC_INS_SELECT_FILE,
+        .P1 = 0x00,
+        .P2 = 0x0C,
+        .LC = 0x02,
+        .data = data_ndef_select,
+        .LE = 0
+    };
+
+    nfc_send_apdu_p(&select_system_file, false);
+    nfc_read_apdu_r(&response, select_system_file.LE);
+
+    uint8_t system_file[0x11];
+    nfc_read_data_from_memory(system_file, 0, sizeof(system_file));
+
+    uint8_t pw[16] = {0};
+
+    c_apdu_t verify_file = {
+        .PCB = NFC_PCB_BYTE,
+        .CLA = 0,
+        .INS = 0x20,
+        .P1 = 0x00,
+        .P2 = 0x03,
+        .LC = 0x10,
+        .data = pw,
+        .LE = 0
+    };
+
+    nfc_send_apdu_p(&verify_file, false);
+    nfc_read_apdu_r(&response, verify_file.LE);
+
+    uint8_t gpo_byte = 0x20;
+    nfc_write_data_to_memory(&gpo_byte, 4, 1);
+    nfc_read_data_from_memory(&gpo_byte, 4, 1);
+    
+    return;
 }
 
 void deinit_nfc() {
@@ -98,6 +147,9 @@ bool nfc_read_timestamp_record(RTC_TimeTypeDef *sTime, RTC_DateTypeDef *sDate) {
     };
 
     uint8_t total_len = nfc_read_total_ndef_length();
+
+    if (total_len > NFC_STEP_RECORD_MIN_LENGTH || total_len == 0)
+        return false;
 
     read_binary.P2 = 2;
     read_binary.LE = total_len;

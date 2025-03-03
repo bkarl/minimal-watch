@@ -27,13 +27,14 @@ void display_init() {
     display_init_gpio();
     display_init_timer();
     display_set_time();
+    rtc_enable_second_tick();
 }
 
 void display_shutdown() {
     TIM2->CR1 = 0;
     display_switch_all_off();
     __HAL_RCC_TIM2_CLK_DISABLE();
-    rtc_disable_second_alarm();
+    rtc_disable_second_tick();
 }
 
 void display_set_time()

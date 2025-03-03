@@ -46,13 +46,14 @@ void rtc_set_time_from_nfc() {
   sTime.StoreOperation = RTC_STOREOPERATION_RESET;
   HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
   HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+  nfc_clear_ndef_message();
 }
 
 void rtc_set_alarm() {
   RTC_AlarmTypeDef sAlarm = {0};
 	sAlarm.AlarmTime.Hours = 23;
-	sAlarm.AlarmTime.Minutes = 55;
-	sAlarm.AlarmTime.Seconds = 00;
+	sAlarm.AlarmTime.Minutes = 59;
+	sAlarm.AlarmTime.Seconds = 55;
 	sAlarm.AlarmTime.SubSeconds = 0;
 	sAlarm.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
 	sAlarm.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
@@ -62,9 +63,16 @@ void rtc_set_alarm() {
 	sAlarm.AlarmDateWeekDay = 1;
 	sAlarm.Alarm = RTC_ALARM_A;
 
+	HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BIN);
+  HAL_NVIC_SetPriority(RTC_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(RTC_IRQn);
+}
 
-	//HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BIN);
-
+void rtc_enable_second_tick() {
+  RTC_AlarmTypeDef sAlarm;
+	sAlarm.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
+	sAlarm.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY;
+	sAlarm.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
   sAlarm.Alarm = RTC_ALARM_B;
   sAlarm.AlarmMask = RTC_ALARMMASK_ALL;
 	HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BIN);
@@ -74,9 +82,10 @@ void rtc_set_alarm() {
 }
 
 void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc) {
+  UNUSED(hrtc);
   wakeup_reason = WAKEUP_REASON_ALARM;
 }
 
-void rtc_disable_second_alarm() {
+void rtc_disable_second_tick() {
   HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_B);
 }

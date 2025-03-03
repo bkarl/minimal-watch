@@ -31,7 +31,8 @@ int main(void)
 
 void check_pending_task() {
   i2c_init();
-  //init_nfc();
+  init_nfc();
+  //bma400_write_step_ctr_value_to_nfc(false);
   switch (wakeup_reason) {
     case WAKEUP_REASON_NONE:
       rtc_init();
@@ -41,11 +42,11 @@ void check_pending_task() {
       break;
 
     case WAKEUP_REASON_NFC:
-      //rtc_set_time_from_nfc();
+      rtc_set_time_from_nfc();
       break;
 
     case WAKEUP_REASON_ALARM:
-      //bma400_write_step_ctr_value_to_nfc(true);
+      bma400_write_step_ctr_value_to_nfc(true);
       append_new_step_counter_record = true;
       break;
 
@@ -55,7 +56,7 @@ void check_pending_task() {
 
   }
 
-  //deinit_nfc();
+  deinit_nfc();
   i2c_deinit();
   wakeup_reason = WAKEUP_REASON_NONE;
 }
