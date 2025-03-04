@@ -25,14 +25,16 @@ void i2c_read_register(uint8_t address, uint8_t reg_address, uint8_t* dout, uint
     i2c_stop_condition();
 }
 
-void i2c_write_register(uint8_t address, uint8_t reg_address, uint8_t* din, uint8_t n_write) {
+uint8_t i2c_write_register(uint8_t address, uint8_t reg_address, uint8_t* din, uint8_t n_write) {
+    uint8_t ack;
     i2c_start_condition();
     i2c_master_write(address);
     i2c_master_write(reg_address);
     for (int i = 0; i < n_write; i++) {
-        i2c_master_write(din[i]);
+        ack = i2c_master_write(din[i]);
     }
     i2c_stop_condition();
+    return ack;
 }
 /**
 * @brief I2C master write 8-bit data bit-bang

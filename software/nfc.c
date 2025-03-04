@@ -8,9 +8,10 @@ void nfc_set_int_to_wip_mode();
 void init_nfc() {
     power_enable_light_nfc();
     uint8_t rdata_out[255];
+    c_apdu_r response = {
+        .data = rdata_out
+    };
 
-    nfc_init_crc_engine();
-    i2c_write_register(NFC_ADDRESS, NFC_GET_I2C_SESSION, NULL, 0);
     uint8_t data[] = {0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01};
     c_apdu_t select_ndef_tag_application = {
         .PCB = NFC_PCB_BYTE,
@@ -36,14 +37,15 @@ void init_nfc() {
         .LE = 0
     };
 
-    c_apdu_r response = {
-        .data = rdata_out
-    };
+    nfc_init_crc_engine();
+    do {
+        i2c_write_register(NFC_ADDRESS, NFC_GET_I2C_SESSION, NULL, 0);
 
-    HAL_Delay(NFC_WAIT_MS_AFTER_CMD);
+        HAL_Delay(NFC_WAIT_MS_AFTER_CMD);
 
-    nfc_send_apdu_p(&select_ndef_tag_application, true);
-    nfc_read_apdu_r(&response, select_ndef_tag_application.LE);
+        nfc_send_apdu_p(&select_ndef_tag_application, true);
+        nfc_read_apdu_r(&response, select_ndef_tag_application.LE);
+    } while (response.SW1 != 0x90);
 
     //nfc_set_int_to_wip_mode();
 
@@ -89,7 +91,7 @@ void nfc_set_int_to_wip_mode() {
     nfc_send_apdu_p(&verify_file, false);
     nfc_read_apdu_r(&response, verify_file.LE);
 
-    uint8_t gpo_byte = 0x20;
+    uint8_t gpo_byte = 0x30;
     nfc_write_data_to_memory(&gpo_byte, 4, 1);
     nfc_read_data_from_memory(&gpo_byte, 4, 1);
     

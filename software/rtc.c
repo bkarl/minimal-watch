@@ -69,7 +69,7 @@ void rtc_set_alarm() {
 }
 
 void rtc_enable_second_tick() {
-  RTC_AlarmTypeDef sAlarm;
+  RTC_AlarmTypeDef sAlarm = {0};
 	sAlarm.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
 	sAlarm.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY;
 	sAlarm.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
