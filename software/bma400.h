@@ -24,7 +24,7 @@
 #define BMA400_ACC_CONFIG2_DATA         0x00 //data_src_reg = variable ODR filter
 
 #define BMA400_INT_CONFIG0_DATA         0x00
-#define BMA400_INT_CONFIG1_DATA         0x08 //d_tap_int_en, non latching mode
+#define BMA400_INT_CONFIG1_DATA         0x09 //step_int_en, d_tap_int_en, non latching mode
 #define BMA400_INT_MAP1_DATA            0x00
 #define BMA400_INT_MAP2_DATA            0x00
 #define BMA400_INT_MAP12_DATA           0x40 //tap sensing interrupt is mapped to INT2
