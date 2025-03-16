@@ -6,6 +6,12 @@
 #define N_COLUMNS 6
 #define N_COLORS 2
 
+typedef enum {
+    DISPLAY_MODE_TIME,
+    DISPLAY_MODE_STEPS,
+    DISPLAY_MODE_SECONDS
+} display_mode_t;
+
 typedef struct {
     unsigned current_column;
     uint8_t red_vals[N_ROWS];
@@ -41,12 +47,15 @@ Each LED has two colors. The LSB is on the right side.
 #define GREEN_SOURCE_ROW_0    GPIO_PIN_6
 #define GREEN_SOURCE_ROW_1    GPIO_PIN_3
 
+#define STEP_PER_DAY_TARGET 10000
+#define STEPS_PER_TICK STEP_PER_DAY_TARGET/N_COLUMNS
 
 void display_init();
 void display_init_gpio();
 void display_switch_all_off();
 void display_iterate_column();
 void switch_row_color_if_enabled(pin_mapping_t *row_pin_mapping, uint8_t row_val, unsigned row_idx);
+void display_set_step_ctr(uint8_t *pixel_reg);
 void display_init_timer();
 void display_set_time();
 void display_shutdown();

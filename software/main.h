@@ -29,6 +29,14 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l0xx_hal_conf.h"
 #include "stm32l0xx_hal.h"
+#include "display.h"
+
+typedef struct {
+  display_mode_t display_mode;
+  uint32_t step_ctr_val_today;
+} global_state_t;
+
+extern global_state_t global_state;
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */

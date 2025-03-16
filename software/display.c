@@ -1,5 +1,6 @@
 #include "display.h"
 #include "rtc.h"
+#include "main.h"
 
 display_state_t display_state;
 
@@ -43,8 +44,42 @@ void display_set_time()
     RTC_DateTypeDef sDate = {0};
     HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
     HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
-    display_state.red_vals[0] = sTime.Hours;
-    display_state.green_vals[1] = sTime.Minutes;
+    switch (global_state.display_mode) {
+        case DISPLAY_MODE_TIME: 
+            display_state.red_vals[0] = sTime.Hours;
+            display_state.green_vals[1] = sTime.Minutes;
+            break;
+        case DISPLAY_MODE_SECONDS: 
+            display_state.red_vals[0] = sTime.Minutes;
+            display_state.green_vals[1] = sTime.Seconds;
+            break;
+        case DISPLAY_MODE_STEPS: {
+                if (global_state.step_ctr_val_today > STEP_PER_DAY_TARGET && global_state.step_ctr_val_today < 2 * STEP_PER_DAY_TARGET) {
+                    display_set_step_ctr(display_state.green_vals);
+                }
+                else if (global_state.step_ctr_val_today >= 2 * STEP_PER_DAY_TARGET) {
+                    display_set_step_ctr(display_state.red_vals);
+                    display_set_step_ctr(display_state.green_vals);
+                }
+                else {
+                    display_set_step_ctr(display_state.red_vals);
+                }
+                break;
+            }
+    }
+}
+
+void display_set_step_ctr(uint8_t *pixel_reg) {
+    for (int i = 0; i < N_COLUMNS; i++) {
+        for (int row = 0; row < N_ROWS; row++) {
+            uint8_t on_off = 0;
+            if (global_state.step_ctr_val_today / (STEPS_PER_TICK * (i + row * N_COLUMNS)) >= 0.5)
+                on_off = 1;
+            pixel_reg[i] = on_off << (N_COLUMNS - 1 - i);
+        }           
+    }
+    if (pixel_reg[0] == 0)
+        pixel_reg[0] = 1; //dont show a blank display
 }
 
 void display_update() {

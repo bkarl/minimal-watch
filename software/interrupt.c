@@ -1,5 +1,7 @@
 #include "interrupt.h"
 #include "rtc.h"
+#include "main.h"
+#include "display.h"
 
 volatile uint8_t wakeup_reason = WAKEUP_REASON_NONE;
 
@@ -35,25 +37,38 @@ void interrupts_init_gpio() {
     HAL_GPIO_Init(NFC_INT_GPIO, &GPIO_InitStruct);
     HAL_GPIO_ReadPin(NFC_INT_GPIO, NFC_INT_PIN);
     
-    GPIO_InitStruct.Pin = BUTTON_0_PIN | BUTTON_1_PIN | BUTTON_2_PIN;
+    GPIO_InitStruct.Pin = BUTTON_0_PIN | BUTTON_1_PIN | BUTTON_2_PIN;                                                                                                                                                                                                                                            
     GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(BUTTON_INT_GPIO, &GPIO_InitStruct);
+}
+
+void interrupt_set_display_mode() {
+  switch (wakeup_reason) {
+    case WAKEUP_REASON_CHECK_STEPS:
+      global_state.display_mode = DISPLAY_MODE_STEPS;
+      break;
+    case WAKEUP_REASON_SHOW_SECONDS:
+      global_state.display_mode = DISPLAY_MODE_SECONDS;
+      break;
+    default:
+      global_state.display_mode = DISPLAY_MODE_TIME;
+  }
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     power_reset_timeout_counter();
     switch (GPIO_Pin) {
         case BUTTON_0_PIN: 
-            wakeup_reason = WAKEUP_REASON_BUTTON;
+            wakeup_reason = WAKEUP_REASON_SHOW_SECONDS;
             break;
         
         case BUTTON_1_PIN: 
-            wakeup_reason = WAKEUP_REASON_BUTTON;
+            wakeup_reason = WAKEUP_REASON_CHECK_STEPS;
             break;
         
         case BUTTON_2_PIN: 
-            wakeup_reason = WAKEUP_REASON_CHECK_STEPS;
+            wakeup_reason = WAKEUP_REASON_BUTTON;
             break;
 
         case NFC_INT_PIN:
@@ -64,4 +79,5 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
             wakeup_reason = WAKEUP_REASON_DOUBLE_TAP;
             break;
     }
+    interrupt_set_display_mode();
 }

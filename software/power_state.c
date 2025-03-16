@@ -92,7 +92,8 @@ void power_stop_timeout_counter() {
 }
 
 void power_reset_timeout_counter() {
-  LPTIM1->CNT = 0;
+  LPTIM1->CR = 0;
+  LPTIM1->CR = LPTIM_CR_ENABLE | LPTIM_CR_CNTSTRT;
 }
 
 void power_timeout_counter_elapsed()

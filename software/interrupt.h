@@ -20,11 +20,13 @@ enum WAKEUP_REASON {
     WAKEUP_REASON_NFC,
     WAKEUP_REASON_BUTTON,
     WAKEUP_REASON_CHECK_STEPS,
+    WAKEUP_REASON_SHOW_SECONDS,
     WAKEUP_REASON_DOUBLE_TAP,
     WAKEUP_REASON_ALARM
 };
 
 void interrupts_init();
 void interrupts_init_gpio();
+void interrupt_set_display_mode();
 
 extern volatile uint8_t wakeup_reason;
